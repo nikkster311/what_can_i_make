@@ -7,8 +7,11 @@ import IngAddExc from "./ingAddExc.component";
 
 //this screen comes up first. users can choose one diet, then auto goes to ing screen
 const PickDiet = props => (
+  <div>
+  <h2>Wonder what you can make with the ingredients you have on hand?</h2>
+  <h2>Let's find out.</h2>
   <form className="form-group diet">
-    <label>Select a diet:</label>
+    <label>Start by selecting a diet:</label>
     <div className="container-flex">
       <input type="button" id="omnivore" value="Omnivore" onClick={props.onClickDietNull} className="btn" />
       <input type="button" id="glutenfree" value="Gluten Free" onClick={props.onClick} className="btn" />
@@ -18,6 +21,7 @@ const PickDiet = props => (
       <input type="button" id="paleo" value="Paleo" onClick={props.onClick} className="btn" />
     </div>
   </form>
+  </div>
 )
 
 

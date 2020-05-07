@@ -7,7 +7,7 @@ export default class Footer extends Component{
 
   render() {
     return(
-      <div className="footer">Copyright: nikkster.tech</div>
+      <div className="footer">Copyright <a target="_blank" rel=" noopener noreferrer" href="http://nikkster.tech">nikkster.tech</a></div>
     )
   }
 }

@@ -7,7 +7,7 @@ export default class Navbar extends Component{
 
   render() {
     return(
-      <div className="topnav">Find A Recipe</div>
+      <div className="topnav">What Can I Make?</div>
     )
   }
 }

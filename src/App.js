@@ -18,14 +18,14 @@ export default class App extends Component{
       ingList: [], //updates when user presses "add", adds ingredient to list
       ingListExc: [],
       ingListString: "", //creates clean str for display when user clicks "next" on ing add page
-
+      ingListPaired: [],
       ingListQuery: "", //creates a list to use for the query, on results page
       ingListExcQuery: "",
       diet: "", //veg, vegan, GF, etc..
       chooseDietScreen: true,
       ingScreen: false,
       ingExcScreen: false,
-
+      ingListOrig: [],
       resultsLoading: true
     }
 
@@ -52,6 +52,8 @@ toggleView() {
       ingListString: "",
       ingListQuery: "",
       ingListExcQuery: "",
+      ingListOrig: [],
+      ingListPaired: [],
       diet: "",
       chooseDietScreen: true,
       ingScreen: false,
@@ -78,8 +80,7 @@ addIng(e){
     this.state.ingScreen ?
     this.setState({ //set add list state and restart
       ingList: ingList,
-      newIng: {name: "", key: ""}
-    }, () => console.log(this.state.ingList))
+      newIng: {name: "", key: ""}})
     :
     this.setState({ //set exclude list state and restart
       ingListExc: ingList,
@@ -90,29 +91,21 @@ addIng(e){
 //as someone types, newIng updates
 newIngHandleInput(e) {
   this.setState({
-    newIng: {key: Date.now(), name: e.target.value}
-  }, () => console.log(`newIng: ${this.state.newIng.name} and key: ${this.state.newIng.key}`))
+    newIng: {key: Date.now(), name: e.target.value}})
 }
 
 deleteIng = key => {
-  console.log("running deleteIng....")
-  console.log(`ingScreen: ${this.state.ingScreen}, ingExcScreen: ${this.state.ingExcScreen}`)
   //depends on which screen they are on...
   const newList = this.state.ingScreen ? this.state.ingList : this.state.ingListExc
-  console.log("newList: " + newList)
   const filteredList = newList.filter(ing => ing.key !== key)
-  console.log("filteredList : " + filteredList)
   //depending on which page you're on (add or exclude)
   this.state.ingScreen ? this.setState({ingList: filteredList}) : this.setState({ingListExc : filteredList})
 } //takes list, filters so it only shows ing without those keys, resets state
 
 ingString() {
   const ingList = this.state.ingList.map(item => item.name)
-  console.log(`ingString ingList is : ${ingList}`)
   const ingListString = ingList.join(", ")
-  console.log(ingListString + " : ingListString")
-  this.setState({ingListString: ingListString},
-    () => { console.log(this.state.ingListString + " : this.state.ingListString")})
+  this.setState({ingListString: ingListString})
 }
 
 //======================================================
@@ -123,15 +116,13 @@ ingString() {
 
 //when you choose a diet you move to the search screen
 onClickDiet(e){
-  console.log(e.target.value)
   this.setState({
-    diet: e.target.value.toLowerCase(), chooseDietScreen: false, ingScreen: true
- }, () => console.log(`your diet is: ${this.state.diet}. ingScreen: ${this.state.ingScreen}`))
+    diet: e.target.value.toLowerCase(), chooseDietScreen: false, ingScreen: true})
 }
 
 //if they click omnivore, diet = null (for query string)
 onClickDietNull(){
-  this.setState({chooseDietScreen: false, ingScreen: true}, () => { console.log( `diet: ${this.state.diet}`)})
+  this.setState({chooseDietScreen: false, ingScreen: true})
 }
 
 
@@ -162,10 +153,8 @@ next(e) { //set state of ing, of ingExcScreen, turn list to string
 
 //UGH (){ was reseting the app and causing these functions to not run.....
 onClickSearch = () => {
- console.log("Searching.....")
  this.toggleView()
  this.ingListQuery()
- console.log("toggleView called")
  //call toggleView, changes the page on app.js
 }
 
@@ -176,21 +165,34 @@ resultsLoadingHandler() {
 //=======================================================
 
 ingListQuery() {
-  console.log("running ingListQuery")
   //map list of ingredients (included and excluded)
   const ingList = this.state.ingList.map(item => item.name)
+  const ingListOrig = [...ingList]
+  this.setState({ingListOrig: ingList})
+  for (var x=0; x < ingListOrig.length; x++) { //search thru ingList for the #items in ingListOrig
+    if (ingList[x].endsWith('s')) { //if the ing ends with "-s"...
+      if (ingList[x].endsWith('ies')) { //...ends with "-ies"...
+    	   ingList.push(ingList[x].replace('ies', 'y')); //push singular
+      } else {
+        ingList.push(ingList[x].replace('s', ''))  //push singular
+      }
+    } else if(ingList[x].endsWith('y')) { //if ends with y...
+      ingList.push(ingList[x].replace("y", "ies"))   //...push plural
+    } else {
+      ingList.push(ingList[x].concat('s')) //if singular, push plural
+    }
+  }
+  var halflen = ingList.length/2
+  var ingListPaired = [];
+  for (var y=0; y < halflen; y++) {
+    ingListPaired.push({item1: ingList[y], item2: ingList[y + halflen]})
+  }
   const ingListExc = this.state.ingListExc.map(item => item.name)
-  console.log(`ingList: ${ingList}`)
-  console.log(`ingListExc: ${ingListExc}`)
   //make them suitable for the query string
   const queryList = ingList.join(",").replace(" ", "+")
   const queryExcList = ingListExc.join(",").replace(" ", "+")
-  console.log(`queryList: ${queryList}`)
-  console.log(`queryExcList: ${queryExcList}`)
   //set state for both query strings
-  this.setState({ingListQuery: queryList, ingListExcQuery: queryExcList}, () => {
-    console.log(`ingListQuery is ${this.state.ingListQuery} and ingListExcQuery is ${this.state.ingListExcQuery}` )
-  })
+  this.setState({ingListQuery: queryList, ingListExcQuery: queryExcList, ingList: ingList, ingListPaired: ingListPaired})
   //separates ingredients with ",+", required for query by spoonacular
 }
 
@@ -221,6 +223,7 @@ render() {
          :
         <Results toggleView={this.toggleView}
         ingList={this.state.ingList}
+        ingListPaired={this.state.ingListPaired}
         ingListQuery = {this.state.ingListQuery}
         ingListExcQuery = {this.state.ingListExcQuery}
         ingListString = {this.state.ingListString}
